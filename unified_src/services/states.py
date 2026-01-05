@@ -15,6 +15,8 @@ class ChatState(TypedDict):
     messages: Annotated[List[Any], add_messages]
     user_id: Optional[str]
     session_id: Optional[str]
+    extracted_context: Optional[str]
+    uploaded_files: Optional[List[str]]
 
 
 # ========================
@@ -84,6 +86,8 @@ class WebChatState(TypedDict):
     user_id: Optional[str]
     session_id: Optional[str]
     use_web_search: bool
+    extracted_context: Optional[str]
+    uploaded_files: Optional[List[str]]
 
 
 # ========================

@@ -5,6 +5,7 @@ import streamlit as st
 from unified_src.services.llm_service import get_llm
 from unified_src.agents.report_generator import create_report_generator_graph
 from unified_src.services.markdown_exporter import MarkdownExporter
+from unified_src.services.pdf_exporter import PDFExporter
 from unified_src.utils.helpers import (
     initialize_session_state, get_module_state, update_module_state,
     display_error, display_success, display_info
@@ -91,7 +92,7 @@ def render_report_generator_ui():
         generate_button = st.button("🚀 Generate Report", use_container_width=True, type="primary")
     
     with col2:
-        pdf_disabled = st.checkbox("PDF Export (Coming Soon)", value=False, disabled=True)
+        pass
     
     with col3:
         # Placeholder for future features
@@ -188,8 +189,14 @@ def render_report_generator_ui():
                     use_container_width=True
                 )
                 
-                # PDF stub message
-                st.info("💡 PDF export is coming soon! Stay tuned.")
+                # PDF download
+                st.download_button(
+                    label="📥 Download as PDF (.pdf)",
+                    data=PDFExporter.export_report(title, markdown_content),
+                    file_name=f"{title}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
         
         except Exception as e:
             display_error(f"Report generation failed: {str(e)}")

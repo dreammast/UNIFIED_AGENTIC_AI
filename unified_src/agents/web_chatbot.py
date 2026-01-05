@@ -79,6 +79,10 @@ class WebSearchNode:
             for i, result in enumerate(search_results, 1):
                 context += f"{i}. {result.title}\n   {result.snippet}\n   Source: {result.source}\n\n"
         
+        # Append extracted content from files/links
+        if state.get("extracted_context"):
+            context += f"\n\nUser Uploaded Content / Provided Links Analysis:\n{state['extracted_context']}\n"
+        
         # Prepare system prompt with search context
         system_prompt = f"""You are a helpful AI assistant with access to web search results.
         Use the provided search results to ground your answers in real information.

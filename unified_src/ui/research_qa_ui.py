@@ -5,6 +5,7 @@ import streamlit as st
 from unified_src.services.llm_service import get_llm
 from unified_src.agents.research_agent import create_research_qa_graph
 from unified_src.services.markdown_exporter import MarkdownExporter
+from unified_src.services.pdf_exporter import PDFExporter
 from unified_src.utils.helpers import (
     initialize_session_state, get_module_state, update_module_state,
     display_error, display_success, display_info
@@ -157,6 +158,18 @@ def render_research_qa_ui():
                     data=md_bytes,
                     file_name=md_filename,
                     mime="text/markdown",
+                    use_container_width=True
+                )
+                
+                # PDF download
+                st.download_button(
+                    label="📥 Download Q&A as PDF",
+                    data=PDFExporter.export_report(
+                        f"Q&A: {question[:50]}...",
+                        markdown_content
+                    ),
+                    file_name=exporter.sanitize_filename(f"qa_response_{question[:30]}.pdf"),
+                    mime="application/pdf",
                     use_container_width=True
                 )
                 

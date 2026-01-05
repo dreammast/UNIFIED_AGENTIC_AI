@@ -4,6 +4,7 @@ UI component for AI News Generator.
 import streamlit as st
 from unified_src.services.llm_service import get_llm
 from unified_src.agents.news_generator import create_news_generator_graph
+from unified_src.services.pdf_exporter import PDFExporter
 from unified_src.utils.helpers import (
     initialize_session_state, get_module_state, update_module_state,
     display_error, display_success
@@ -134,10 +135,13 @@ def render_news_generator_ui():
                 markdown_content += f"{article.content}\n\n---\n\n"
             
             st.download_button(
-                label="📥 Download as Markdown",
-                data=markdown_content,
-                file_name=f"{selected_category}_{selected_timeframe}_briefing.md",
-                mime="text/markdown"
+                label="📥 Download as PDF",
+                data=PDFExporter.export_report(
+                    f"{selected_category} {selected_timeframe.capitalize()} Briefing",
+                    markdown_content
+                ),
+                file_name=f"{selected_category}_{selected_timeframe}_briefing.pdf",
+                mime="application/pdf"
             )
         
         except Exception as e:

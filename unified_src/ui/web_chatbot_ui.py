@@ -4,6 +4,8 @@ UI component for Web Search Chatbot.
 import streamlit as st
 from langchain_core.messages import HumanMessage
 from unified_src.services.llm_service import get_llm
+from unified_src.services.pdf_exporter import PDFExporter
+from unified_src.services.content_processor import ContentProcessor
 from unified_src.agents.web_chatbot import create_web_chatbot_graph
 from unified_src.utils.helpers import (
     initialize_session_state, get_module_state, update_module_state,
@@ -22,6 +24,16 @@ def render_web_chatbot_ui():
     with st.sidebar:
         st.subheader("Web Search Settings")
         use_web_search = st.checkbox("Enable Web Search", value=True)
+        
+        st.divider()
+        st.write("📂 **Multimodal Input**")
+        st.file_uploader(
+            "Upload files (PDF, TXT, MD)", 
+            type=["pdf", "txt", "md"], 
+            accept_multiple_files=True,
+            key="web_chat_files"
+        )
+        st.text_input("Analyze URL", placeholder="https://example.com", key="web_chat_url")
     
     # Get or initialize web chatbot state
     web_chatbot_state = get_module_state("web_chatbot")
@@ -66,10 +78,21 @@ def render_web_chatbot_ui():
             graph = create_web_chatbot_graph(llm)
             
             with st.spinner("Searching web and generating response..."):
+                uploaded_files = st.session_state.get("web_chat_files", [])
+                url_input = st.session_state.get("web_chat_url", "")
+                
+                extracted_context = ""
+                if uploaded_files or url_input:
+                     with st.spinner("Analyzing uploaded content..."):
+                         urls = [url_input] if url_input else []
+                         extracted_context = ContentProcessor.process_content_list(files=uploaded_files, urls=urls)
+            
                 state = {
                     "messages": web_chatbot_state["messages"],
                     "search_results": web_chatbot_state.get("search_results", []),
-                    "use_web_search": use_web_search
+                    "use_web_search": use_web_search,
+                    "extracted_context": extracted_context,
+                    "uploaded_files": [f.name for f in uploaded_files] if uploaded_files else []
                 }
                 result = graph.invoke(state)
                 
@@ -118,3 +141,12 @@ def render_web_chatbot_ui():
             update_module_state("web_chatbot", web_chatbot_state)
             display_success("Chat history cleared!")
             st.rerun()
+
+        if web_chatbot_state["messages"]:
+            st.divider()
+            st.download_button(
+                label="📥 Export Chat to PDF",
+                data=PDFExporter.export_chat_history("Web Chatbot History", web_chatbot_state["messages"]),
+                file_name="web_chat_history.pdf",
+                mime="application/pdf"
+            )

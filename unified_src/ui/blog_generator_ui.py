@@ -4,6 +4,7 @@ UI component for Blog Generator.
 import streamlit as st
 from unified_src.services.llm_service import get_llm
 from unified_src.agents.blog_generator import create_blog_generator_graph
+from unified_src.services.pdf_exporter import PDFExporter
 from unified_src.utils.helpers import (
     initialize_session_state, get_module_state, update_module_state,
     display_error, display_success
@@ -130,10 +131,13 @@ def render_blog_generator_ui():
                 
                 # Download button
                 st.download_button(
-                    label="📥 Download as Markdown",
-                    data=markdown_content,
-                    file_name=f"{blog_content.seo_metadata.title.replace(' ', '_')}.md",
-                    mime="text/markdown"
+                    label="📥 Download as PDF",
+                    data=PDFExporter.export_report(
+                        blog_content.seo_metadata.title,
+                        markdown_content
+                    ),
+                    file_name=f"{blog_content.seo_metadata.title.replace(' ', '_')}.pdf",
+                    mime="application/pdf"
                 )
         
         except Exception as e:
@@ -174,3 +178,28 @@ def render_blog_generator_ui():
         # Display conclusion
         st.markdown("## Conclusion")
         st.write(blog_content.conclusion)
+
+        # Download options
+        st.divider()
+        st.subheader("💾 Download")
+        
+        # Generate content for PDF
+        pdf_content = f"# {blog_content.seo_metadata.title}\n\n"
+        pdf_content += f"**Tone:** {blog_content.seo_metadata.tone}\n"
+        pdf_content += f"**Keywords:** {', '.join(blog_content.seo_metadata.keywords)}\n\n"
+        pdf_content += "## Introduction\n\n"
+        pdf_content += f"{blog_content.introduction}\n\n"
+        pdf_content += "## Main Content\n\n"
+        for section in blog_content.sections:
+             pdf_content += f"### {section.get('heading', 'Section')}\n\n{section.get('content', '')}\n\n"
+        pdf_content += f"## Conclusion\n\n{blog_content.conclusion}"
+
+        st.download_button(
+            label="📥 Download as PDF",
+            data=PDFExporter.export_report(
+                blog_content.seo_metadata.title,
+                pdf_content
+            ),
+            file_name=f"{blog_content.seo_metadata.title.replace(' ', '_')}.pdf",
+            mime="application/pdf"
+        )

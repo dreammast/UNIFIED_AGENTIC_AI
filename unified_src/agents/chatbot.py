@@ -30,7 +30,11 @@ class ChatbotNode:
         last_message = messages[-1]
         
         # Prepare messages for LLM
-        llm_messages = [{"role": "system", "content": self.system_prompt}]
+        system_prompt = self.system_prompt
+        if state.get("extracted_context"):
+            system_prompt += f"\n\nRelevant Context from User Files/Links:\n{state['extracted_context']}"
+            
+        llm_messages = [{"role": "system", "content": system_prompt}]
         
         for msg in messages:
             if isinstance(msg, dict):
